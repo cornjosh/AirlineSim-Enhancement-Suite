@@ -95,13 +95,13 @@ function displayRouteManagement() {
 
             let buttonElements = {
                 "selectFirstSix": {
-                    "label": "Select first 6"
+                    "label": "Select first 200"
                 },
                 "hideChecked": {
                     "label": "Hide checked"
                 },
                 "openInventory": {
-                    "label": "Open inventory (max 6)"
+                    "label": "Open inventory (max 200)"
                 },
                 "reloadTable": {
                     "label": "Reload table"
@@ -141,13 +141,13 @@ function displayRouteManagement() {
 
             // Button actions
 
-            // Select first six
+            // Select first 200
             buttonElements["selectFirstSix"].element.addEventListener("click", function() {
                 let count = 0
                 $('#aes-table-routeManagement tbody tr').each(function() {
                     $(this).find("input").prop('checked', true);
                     count++;
-                    if (count > 5) {
+                    if (count >= 200) {
                         return false;
                     }
                 })
@@ -159,7 +159,7 @@ function displayRouteManagement() {
             });
 
             // Open Inventory
-            buttonElements["openInventory"].element.addEventListener("click", function() {
+            buttonElements["openInventory"].element.addEventListener("click", async function() {
                 //Get checked columns
                 let pages = $('#aes-table-routeManagement tbody tr').has('input:checked').map(function() {
                     let orgdest = $(this).attr('id');
@@ -170,11 +170,8 @@ function displayRouteManagement() {
                     return url;
                 }).toArray();
 
-                //Open new tabs
-                for (let i = 0; i < pages.length; i++) {
-                    if (i >= 6) break;
-                    window.open(pages[i], '_blank');
-                }
+                //Open new tabs with delay
+                await AES.openPagesWithDelay(pages);
             });
 
             // Reload table reloadTable
