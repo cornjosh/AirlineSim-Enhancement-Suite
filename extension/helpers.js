@@ -253,9 +253,9 @@ class AES {
     // Open pages with delay
     static async openPagesWithDelay(pages) {
         for (let i = 0; i < pages.length; i++) {
-            if (i >= 20) break;
+            if (i >= 200) break;
             window.open(pages[i], '_blank');
-            await AES.sleep(200);  // 改成非零
+            await AES.sleep(500);  // 改成非零
         }
     }
 
