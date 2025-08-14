@@ -10,7 +10,8 @@ function setDefaultSettings() {
     let aesSettings = {
         invPricing: setDefaultInvPricingSettings(),
         general: setDefaultGeneralSettings(),
-        schedule: setDefaultScheduleSettings()
+        schedule: setDefaultScheduleSettings(),
+        flightInfo: setDefaultFlightInfoSettings()
     };
     chrome.storage.local.get(['settings'], function(result) {
         let settings = result.settings;
@@ -109,6 +110,17 @@ function setDefaultInvPricingSettings() {
         };
     });
     return invPricing;
+}
+
+function setDefaultFlightInfoSettings() {
+    //auto settings
+    let flightInfo = {
+        autoClose: 0,
+        autoExtractOnOpenAircraft: 0,
+        autoExtractScope: 'finished',
+        autoCloseAircraftAfterRefresh: 1
+    };
+    return flightInfo;
 }
 
 //MAIN

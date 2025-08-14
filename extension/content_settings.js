@@ -57,13 +57,31 @@ function displaySettings() {
 //FLight Info
 function displayFlightInfoSettings() {
     if (!settings.flightInfo) {
-        settings.flightInfo = { autoClose: 0 };
+        settings.flightInfo = { 
+            autoClose: 0,
+            autoExtractOnOpenAircraft: 0,
+            autoExtractScope: 'finished',
+            autoCloseAircraftAfterRefresh: 1
+        };
     }
-    let input = $('<input type="checkbox">');
+    
+    // Ensure new settings exist with defaults
+    if (settings.flightInfo.autoExtractOnOpenAircraft === undefined) {
+        settings.flightInfo.autoExtractOnOpenAircraft = 0;
+    }
+    if (settings.flightInfo.autoExtractScope === undefined) {
+        settings.flightInfo.autoExtractScope = 'finished';
+    }
+    if (settings.flightInfo.autoCloseAircraftAfterRefresh === undefined) {
+        settings.flightInfo.autoCloseAircraftAfterRefresh = 1;
+    }
+    
+    // Original auto-close setting
+    let input1 = $('<input type="checkbox">');
     if (settings.flightInfo.autoClose) {
-        input.prop('checked', true);
+        input1.prop('checked', true);
     }
-    $(input).click(function() {
+    $(input1).click(function() {
         if (this.checked) {
             settings.flightInfo.autoClose = 1;
         } else {
@@ -71,10 +89,80 @@ function displayFlightInfoSettings() {
         }
         chrome.storage.local.set({ settings: settings }, function() {});
     });
-    let span = $('<span></span>').text('Automatically close flight information page after extracting financial information.');
-    let label = $('<label></label>').append(input, span);
-    let checkboxDiv = $('<div class="checkbox"></div>').append(label);
-    let panelDiv = $('<div class="as-panel"></div>').append(checkboxDiv);
+    let span1 = $('<span></span>').text('Automatically close flight information page after extracting financial information.');
+    let label1 = $('<label></label>').append(input1, span1);
+    let checkboxDiv1 = $('<div class="checkbox"></div>').append(label1);
+    
+    // New auto-extract setting
+    let input2 = $('<input type="checkbox" id="aes-autoExtractOnOpen">');
+    if (settings.flightInfo.autoExtractOnOpenAircraft) {
+        input2.prop('checked', true);
+    }
+    $(input2).click(function() {
+        if (this.checked) {
+            settings.flightInfo.autoExtractOnOpenAircraft = 1;
+            $('#aes-extractScopeRadios').show();
+        } else {
+            settings.flightInfo.autoExtractOnOpenAircraft = 0;
+            $('#aes-extractScopeRadios').hide();
+        }
+        chrome.storage.local.set({ settings: settings }, function() {});
+    });
+    let span2 = $('<span></span>').text('Automatically start extraction when opening aircraft pages from Aircraft Profitability.');
+    let label2 = $('<label></label>').append(input2, span2);
+    let checkboxDiv2 = $('<div class="checkbox"></div>').append(label2);
+    
+    // Extract scope radio buttons
+    let radioFinished = $('<input type="radio" name="extractScope" value="finished" id="aes-scope-finished">');
+    let radioAll = $('<input type="radio" name="extractScope" value="all" id="aes-scope-all">');
+    
+    if (settings.flightInfo.autoExtractScope === 'finished') {
+        radioFinished.prop('checked', true);
+    } else {
+        radioAll.prop('checked', true);
+    }
+    
+    $('input[name="extractScope"]').change(function() {
+        settings.flightInfo.autoExtractScope = $(this).val();
+        chrome.storage.local.set({ settings: settings }, function() {});
+    });
+    
+    let labelFinished = $('<label></label>').append(radioFinished, ' Extract finished flights only');
+    let labelAll = $('<label></label>').append(radioAll, ' Extract all flights');
+    let radioDiv = $('<div class="radio"></div>').append(labelFinished, '<br>', labelAll);
+    let radioContainer = $('<div id="aes-extractScopeRadios" style="margin-left: 20px;"></div>').append(radioDiv);
+    
+    // Show/hide radio buttons based on checkbox state
+    if (!settings.flightInfo.autoExtractOnOpenAircraft) {
+        radioContainer.hide();
+    }
+    
+    // Auto-close after refresh setting
+    let input3 = $('<input type="checkbox">');
+    if (settings.flightInfo.autoCloseAircraftAfterRefresh) {
+        input3.prop('checked', true);
+    }
+    $(input3).click(function() {
+        if (this.checked) {
+            settings.flightInfo.autoCloseAircraftAfterRefresh = 1;
+        } else {
+            settings.flightInfo.autoCloseAircraftAfterRefresh = 0;
+        }
+        chrome.storage.local.set({ settings: settings }, function() {});
+    });
+    let span3 = $('<span></span>').text('After auto extraction, refresh aircraft page to save aggregate data and then close it automatically.');
+    let label3 = $('<label></label>').append(input3, span3);
+    let checkboxDiv3 = $('<div class="checkbox"></div>').append(label3);
+    
+    // Re-attach event handlers after DOM creation
+    setTimeout(function() {
+        $('input[name="extractScope"]').change(function() {
+            settings.flightInfo.autoExtractScope = $(this).val();
+            chrome.storage.local.set({ settings: settings }, function() {});
+        });
+    }, 0);
+    
+    let panelDiv = $('<div class="as-panel"></div>').append(checkboxDiv1, checkboxDiv2, radioContainer, checkboxDiv3);
     let h3 = $('<h3>Flight Information</h3>');
     let mainDiv = $("#aes-div-settingArea");
     mainDiv.empty();

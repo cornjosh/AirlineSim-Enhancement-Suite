@@ -2,12 +2,186 @@
 //MAIN
 //Global vars
 var aircraftFlightData;
+var settings;
+var autoExtractionInProgress = false;
+var autoCloseTimeout;
+
 $(function() {
     aircraftFlightData = getData();
-
-    //Async start
-    getStorageData();
+    
+    // Load settings first, then handle auto-extraction if needed
+    chrome.storage.local.get(['settings'], function(result) {
+        settings = result.settings;
+        
+        // Check for auto-extraction URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const aesParam = urlParams.get('aes');
+        
+        if (aesParam && aesParam.startsWith('auto-extract-')) {
+            const scope = aesParam.replace('auto-extract-', '');
+            handleAutoExtraction(scope);
+        } else {
+            // Normal flow - just get storage data
+            getStorageData();
+        }
+    });
+    
+    // Check if we're returning from an auto-refresh
+    if (sessionStorage.getItem('aes-auto-refresh-pending')) {
+        sessionStorage.removeItem('aes-auto-refresh-pending');
+        handleAutoRefreshReturn();
+    }
 });
+
+function handleAutoExtraction(scope) {
+    console.log('AES: Auto-extraction triggered with scope:', scope);
+    autoExtractionInProgress = true;
+    
+    // Get storage data first
+    getStorageData();
+    
+    // Trigger auto-extraction after a short delay to ensure DOM is ready
+    setTimeout(function() {
+        if (scope === 'finished' || scope === 'all') {
+            console.log('AES: Starting auto-extraction for scope:', scope);
+            autoExtractAndMonitor(scope);
+        } else {
+            console.warn('AES: Unknown extraction scope:', scope);
+            autoExtractionInProgress = false;
+        }
+    }, 1000);
+}
+
+async function autoExtractAndMonitor(scope) {
+    // Start extraction
+    await extractAllFlightProfit(scope);
+    
+    // Monitor for completion
+    monitorExtractionCompletion(scope);
+}
+
+function monitorExtractionCompletion(scope) {
+    const targetFlights = getTargetFlights(scope);
+    const totalFlights = targetFlights.length;
+    
+    if (totalFlights === 0) {
+        console.log('AES: No flights to extract');
+        handleExtractionComplete();
+        return;
+    }
+    
+    console.log('AES: Monitoring extraction progress for', totalFlights, 'flights');
+    
+    let checkCount = 0;
+    const maxChecks = 300; // 30 seconds with 100ms intervals
+    
+    const monitor = setInterval(function() {
+        checkCount++;
+        
+        // Get current storage data
+        let keys = [];
+        for (let flight of targetFlights) {
+            let key = aircraftFlightData.server + 'flightInfo' + flight.id;
+            keys.push(key);
+        }
+        
+        chrome.storage.local.get(keys, function(result) {
+            let extractedCount = 0;
+            
+            for (let key in result) {
+                if (result[key] && result[key].flightId) {
+                    extractedCount++;
+                }
+            }
+            
+            console.log('AES: Extraction progress:', extractedCount, '/', totalFlights);
+            
+            if (extractedCount >= totalFlights || checkCount >= maxChecks) {
+                clearInterval(monitor);
+                
+                if (extractedCount >= totalFlights) {
+                    console.log('AES: Extraction completed successfully');
+                } else {
+                    console.log('AES: Extraction timed out, proceeding anyway');
+                }
+                
+                handleExtractionComplete();
+            }
+        });
+    }, 100);
+}
+
+function getTargetFlights(scope) {
+    return aircraftFlightData.flights.filter(function(flight) {
+        if (scope === 'finished') {
+            return flight.status === 'finished' || flight.status === 'inflight';
+        } else if (scope === 'all') {
+            return true;
+        }
+        return false;
+    });
+}
+
+function handleExtractionComplete() {
+    autoExtractionInProgress = false;
+    
+    if (settings.flightInfo && settings.flightInfo.autoCloseAircraftAfterRefresh) {
+        console.log('AES: Auto-refresh and close enabled, refreshing page...');
+        
+        // Set sessionStorage flag to indicate we're auto-refreshing
+        sessionStorage.setItem('aes-auto-refresh-pending', 'true');
+        
+        // Refresh the page to save aggregated data
+        window.location.reload();
+    } else {
+        console.log('AES: Auto-refresh disabled, extraction complete');
+    }
+}
+
+function handleAutoRefreshReturn() {
+    console.log('AES: Returned from auto-refresh, waiting for data save...');
+    
+    // Wait for the aggregated data to be saved
+    const aircraftKey = aircraftFlightData.server + aircraftFlightData.type + aircraftFlightData.aircraftId;
+    
+    // Monitor for the storage save completion
+    let checkCount = 0;
+    const maxChecks = 300; // 30 seconds
+    
+    const monitor = setInterval(function() {
+        checkCount++;
+        
+        chrome.storage.local.get([aircraftKey], function(result) {
+            if (result[aircraftKey] || checkCount >= maxChecks) {
+                clearInterval(monitor);
+                
+                if (result[aircraftKey]) {
+                    console.log('AES: Aggregated data saved, closing tab...');
+                } else {
+                    console.log('AES: Timeout waiting for data save, closing tab anyway...');
+                }
+                
+                // Set a fallback timeout
+                autoCloseTimeout = setTimeout(function() {
+                    console.log('AES: Fallback timeout, closing tab...');
+                    window.close();
+                }, 1000);
+                
+                // Close the tab
+                window.close();
+            }
+        });
+    }, 100);
+    
+    // Fallback timeout to prevent hanging
+    setTimeout(function() {
+        if (monitor) {
+            clearInterval(monitor);
+            console.log('AES: Fallback timeout reached, closing tab...');
+            window.close();
+        }
+    }, 30000);
+}
 
 function getStorageData() {
     let keys = [];

@@ -2441,7 +2441,14 @@ function generateTable(tableOptionsRule) {
                 btn.click(async function() {
                     let urls = $('tbody tr', table).has('input:checked').map(function() {
                         let id = $(this).attr('id');
-                        let url = 'https://' + server + '.airlinesim.aero/app/fleets/aircraft/' + id + '/1?aes=auto-extract-finished';
+                        let url = 'https://' + server + '.airlinesim.aero/app/fleets/aircraft/' + id + '/1';
+                        
+                        // Check if auto-extraction is enabled and append URL parameter
+                        if (settings.flightInfo && settings.flightInfo.autoExtractOnOpenAircraft) {
+                            let scope = settings.flightInfo.autoExtractScope || 'finished';
+                            url += '?aes=auto-extract-' + scope;
+                        }
+                        
                         return url;
                     }).toArray();
                     //Open new tabs with delay
