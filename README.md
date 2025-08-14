@@ -11,6 +11,7 @@ The AirlineSim Enhancement Suite (AES) offers a set of tools to help CEOs build 
 - See your route overview across with some analytics for the whole network.
 - Automatically update prices to optimal levels.
 - Automatically save historical load data.
+- **Auto-extract flight profit/loss**: When opening multiple aircraft pages from the Aircraft Profitability table, each page automatically extracts finished flight profit/loss data
 - Customize most of the settings to fit your airline needs.
 
 Marcipanas wrote [a guide](https://docs.google.com/document/d/1hzMHb3hTBXSZNtuDKoBuvx1HP9CgB7wVYR59yDYympg/) on how to use the extension’s features.
@@ -34,6 +35,15 @@ The extensions should be added, and you can enable it.
 
 ### Please note
 Until AES is available on the Chrome web store, please apply this method to install it manually.
+
+### Popup Blocker Configuration
+For the auto-extract flight profit/loss feature to work properly when batch-opening aircraft pages, you may need to allow popups for the AirlineSim domain:
+
+1. In Chrome/Edge, click the popup blocker icon in the address bar when visiting AirlineSim
+2. Select "Always allow pop-ups and redirects from [server].airlinesim.aero"
+3. Alternatively, go to browser Settings > Privacy and Security > Site Settings > Pop-ups and redirects, and add the AirlineSim domain to the allowed list
+
+This is necessary because the automatic extraction opens multiple flight information tabs, which browsers may block as automated popup behavior.
 
 ## History
 

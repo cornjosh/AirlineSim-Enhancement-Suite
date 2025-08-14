@@ -266,6 +266,16 @@ function display() {
         span.addClass('warning').text('Please reload page after all flight info pages open');
         extractAllFlightProfit('finished');
     })
+    
+    // Check for auto-extract query parameter and trigger automatically
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('aes') === 'auto-extract-finished') {
+        // Use setTimeout to ensure UI is ready
+        setTimeout(function() {
+            btn1.click();
+        }, 500);
+    }
+    
     //Header
     let h = $('<h3></h3>').text('AES Aircraft Flights');
     let div = $('<div></div>').append(h, actionBar, panel);
