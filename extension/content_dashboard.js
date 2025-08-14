@@ -2425,13 +2425,13 @@ function generateTable(tableOptionsRule) {
             }
             //Option Functions
             function masterTableOptionsSelectFirstSix() {
-                let btn = $('<button type="button" class="btn btn-default">Select first six</button>');
+                let btn = $('<button type="button" class="btn btn-default">Select first 200</button>');
                 btn.click(function() {
                     let count = 0;
                     $('tbody tr', table).each(function() {
                         $(this).find('input[type="checkbox"]').prop('checked', true);
                         count++;
-                        if (count >= 6) {
+                        if (count >= 200) {
                             return false; // break out of .each loop
                         }
                     });
