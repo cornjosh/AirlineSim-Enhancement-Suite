@@ -92,7 +92,8 @@
         "activeTab",
         "declarativeContent",
         "storage",
-        "unlimitedStorage"
+        "unlimitedStorage",
+        "tabs"
     ],
     "host_permissions": ["https://*.airlinesim.aero/"],
     "options_page": "options.html",
