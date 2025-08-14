@@ -2477,7 +2477,7 @@ function generateTable(tableOptionsRule) {
                         // Fallback: open aircraft one-by-one with generous delay
                         for (let i = 0; i < urls.length && i < 200; i++) {
                             window.open(urls[i], '_blank');
-                            await AES.sleep(1000); // 1 second delay
+                            await AES.sleep(10 * 1000); // 10 seconds delay
                         }
                     }
                 });

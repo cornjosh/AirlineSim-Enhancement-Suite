@@ -143,8 +143,8 @@ let currentTabId = null;
 let timeoutHandle = null;
 
 // Constants
-const perAircraftTimeoutMs = 4 * 60 * 1000; // 4 minutes
-const openNextDelayMs = 1000; // 1 second
+const perAircraftTimeoutMs = 30 * 1000; // 30 seconds
+const openNextDelayMs = 10 * 1000; // 10 seconds
 
 // Message handler
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
