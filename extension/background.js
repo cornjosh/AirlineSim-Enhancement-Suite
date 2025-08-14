@@ -135,3 +135,83 @@ chrome.runtime.onInstalled.addListener(function() {
     }]);
     });
 });
+
+// Sequential Aircraft Processing Queue
+let aircraftQueue = [];
+let isProcessing = false;
+let currentTabId = null;
+let timeoutHandle = null;
+
+// Constants
+const perAircraftTimeoutMs = 4 * 60 * 1000; // 4 minutes
+const openNextDelayMs = 1000; // 1 second
+
+// Message handler
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.type === 'startSequentialAircraftProcessing') {
+        console.log('AES Background: Received aircraft URLs to process:', message.urls);
+        
+        // Add URLs to queue
+        aircraftQueue.push(...message.urls);
+        
+        // Start processing if not already running
+        if (!isProcessing) {
+            processNext();
+        }
+        
+        sendResponse({ success: true, queued: message.urls.length });
+        return true;
+    }
+});
+
+// Tab removed handler
+chrome.tabs.onRemoved.addListener(function(tabId) {
+    if (tabId === currentTabId) {
+        console.log('AES Background: Current aircraft tab closed:', tabId);
+        currentTabId = null;
+        
+        // Clear timeout if active
+        if (timeoutHandle) {
+            clearTimeout(timeoutHandle);
+            timeoutHandle = null;
+        }
+        
+        // Schedule next processing after delay
+        setTimeout(function() {
+            processNext();
+        }, openNextDelayMs);
+    }
+});
+
+function processNext() {
+    if (aircraftQueue.length === 0) {
+        console.log('AES Background: Queue empty, processing complete');
+        isProcessing = false;
+        return;
+    }
+    
+    isProcessing = true;
+    const nextUrl = aircraftQueue.shift();
+    
+    console.log('AES Background: Opening next aircraft:', nextUrl);
+    console.log('AES Background: Remaining in queue:', aircraftQueue.length);
+    
+    // Create inactive tab
+    chrome.tabs.create({
+        url: nextUrl,
+        active: false
+    }, function(tab) {
+        currentTabId = tab.id;
+        
+        // Set timeout for this aircraft
+        timeoutHandle = setTimeout(function() {
+            console.log('AES Background: Aircraft timeout reached, force closing tab:', currentTabId);
+            
+            if (currentTabId) {
+                chrome.tabs.remove(currentTabId, function() {
+                    // Tab removal will trigger onRemoved handler
+                });
+            }
+        }, perAircraftTimeoutMs);
+    });
+}

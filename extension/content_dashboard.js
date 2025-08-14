@@ -2451,8 +2451,35 @@ function generateTable(tableOptionsRule) {
                         
                         return url;
                     }).toArray();
-                    //Open new tabs with delay
-                    await AES.openPagesWithDelay(urls);
+                    
+                    // Try to use background service worker queue
+                    try {
+                        const response = await chrome.runtime.sendMessage({
+                            type: 'startSequentialAircraftProcessing',
+                            urls: urls
+                        });
+                        
+                        if (response && response.success) {
+                            console.log('AES: Aircraft queued for sequential processing:', response.queued);
+                            // Show notification to user about queued aircraft
+                            if (typeof Notifications !== 'undefined') {
+                                const notifications = new Notifications();
+                                notifications.add(`${response.queued} aircraft queued for sequential processing`, {
+                                    type: 'success'
+                                });
+                            }
+                        } else {
+                            throw new Error('Background queue not available');
+                        }
+                    } catch (error) {
+                        console.warn('AES: Background queue unavailable, falling back to sequential opening:', error);
+                        
+                        // Fallback: open aircraft one-by-one with generous delay
+                        for (let i = 0; i < urls.length && i < 200; i++) {
+                            window.open(urls[i], '_blank');
+                            await AES.sleep(1000); // 1 second delay
+                        }
+                    }
                 });
                 return btn;
             }
