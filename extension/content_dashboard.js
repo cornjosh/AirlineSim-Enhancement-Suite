@@ -2440,20 +2440,15 @@ function generateTable(tableOptionsRule) {
             }
 
             function masterTableOptionsOpenAircraft() {
-                let btn = $('<button type="button" class="btn btn-default">Open aircraft (max 6)</button>');
-                btn.click(function() {
+                let btn = $('<button type="button" class="btn btn-default">Open aircraft (max 200)</button>');
+                btn.click(async function() {
                     let urls = $('tbody tr', table).has('input:checked').map(function() {
                         let id = $(this).attr('id');
                         let url = 'https://' + server + '.airlinesim.aero/app/fleets/aircraft/' + id + '/1';
                         return url;
                     }).toArray();
-                    //Open new tabs
-                    for (let i = 0; i < urls.length; i++) {
-                        window.open(urls[i], '_blank');
-                        if (i == 5) {
-                            break;
-                        }
-                    }
+                    //Open new tabs with delay
+                    await AES.openPagesWithDelay(urls);
                 });
                 return btn;
             }
