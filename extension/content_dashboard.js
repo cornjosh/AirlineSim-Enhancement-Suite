@@ -2441,7 +2441,7 @@ function generateTable(tableOptionsRule) {
                 btn.click(async function() {
                     let urls = $('tbody tr', table).has('input:checked').map(function() {
                         let id = $(this).attr('id');
-                        let url = 'https://' + server + '.airlinesim.aero/app/fleets/aircraft/' + id + '/1';
+                        let url = 'https://' + server + '.airlinesim.aero/app/fleets/aircraft/' + id + '/1?aes=auto-extract-finished';
                         return url;
                     }).toArray();
                     //Open new tabs with delay
